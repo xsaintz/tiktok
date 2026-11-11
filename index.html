@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jam Upload TikTok</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: satu kolom sempit; input di atas, ringkasan jam, lalu tabel hasil */
+:root {
+  --bg: #f5f6f4; --surface: #ffffff; --fg: #1b2420; --muted: #5d6a64;
+  --line: #dde2df; --accent: #0f7a63; --accent-soft: #d8efe8; --bad: #b3402e;
+  --display: "Space Grotesk", system-ui, sans-serif;
+  --body: "Inter", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121715; --surface: #1a211e; --fg: #e4ebe7; --muted: #94a39c;
+  --line: #2c3532; --accent: #4cc7a6; --accent-soft: #1f3a32; --bad: #f08a76; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121715; --surface: #1a211e; --fg: #e4ebe7; --muted: #94a39c;
+  --line: #2c3532; --accent: #4cc7a6; --accent-soft: #1f3a32; --bad: #f08a76; color-scheme: dark }
+
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 48px; }
+main { max-width: 720px; margin: 0 auto; display: grid; gap: 22px; }
+h1 { font-family: var(--display); font-size: 1.7rem; margin: 0; text-wrap: balance; }
+.lede { margin: 4px 0 0; color: var(--muted); max-width: 60ch; }
+.lede code { font-family: var(--mono); font-size: .85em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+label { font-weight: 600; font-size: .9rem; }
+textarea { width: 100%; box-sizing: border-box; min-height: 130px; margin-top: 6px; padding: 12px; font: 13px/1.6 var(--mono);
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
+textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+button { font: 600 .9rem var(--body); padding: 9px 16px; border-radius: 8px; border: 1px solid var(--accent); cursor: pointer; background: var(--accent); color: var(--surface); }
+button.ghost { background: transparent; color: var(--accent); }
+.hint { color: var(--muted); font-size: .8rem; }
+h2 { font-family: var(--display); font-size: 1.05rem; margin: 0 0 10px; }
+.summary { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.peak { margin: 0 0 14px; }
+.peak b { font-family: var(--display); font-size: 1.25rem; color: var(--accent); }
+.bars { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; align-items: end; height: 90px; }
+.bar { background: var(--accent-soft); border-radius: 2px 2px 0 0; min-height: 2px; }
+.bar.top { background: var(--accent); }
+.ticks { display: grid; grid-template-columns: repeat(24, 1fr); font: 10px var(--mono); color: var(--muted); margin-top: 4px; }
+.ticks span:nth-child(3n+2), .ticks span:nth-child(3n+3) { visibility: hidden; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+td { padding: 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td.id { font-family: var(--mono); font-size: .78rem; color: var(--muted); }
+td.time { font-family: var(--mono); font-weight: 500; }
+.errors { color: var(--bad); font-size: .85rem; margin: 10px 0 0; padding-left: 18px; }
+.note { color: var(--muted); font-size: .8rem; max-width: 62ch; }
+</style>
+
+<main>
+  <header>
+    <h1>Jam Upload TikTok</h1>
+    <p class="lede">Tempel link video TikTok atau angka ID-nya, satu per baris. Waktu upload dibaca dari ID video (<code>ID &gt;&gt; 32</code>) dan ditampilkan dalam WIB.</p>
+  </header>
+
+  <section>
+    <label for="input">Link atau ID video</label>
+    <textarea id="input" spellcheck="false">https://www.tiktok.com/@contoh/video/7703917026898607949
+7704668324053310749
+7705291291879210365
+https://www.tiktok.com/@contoh/video/7706161220325300981
+https://www.tiktok.com/@ckenthusiast/video/7252269798455840027</textarea>
+    <div class="row">
+      <button id="run" type="button">Baca waktu upload</button>
+      <button id="copy" type="button" class="ghost">Salin tabel</button>
+      <button id="clear" type="button" class="ghost">Kosongkan</button>
+      <span class="hint" id="status">Isian di atas adalah contoh.</span>
+    </div>
+    <ul class="errors" id="errors" hidden></ul>
+  </section>
+
+  <section class="summary" id="summary" hidden>
+    <h2>Sebaran jam upload</h2>
+    <p class="peak" id="peak"></p>
+    <div class="bars" id="bars"></div>
+    <div class="ticks" id="ticks"></div>
+  </section>
+
+  <section>
+    <h2>Hasil</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>#</th><th>Hari, tanggal</th><th>Jam WIB</th><th>ID video</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="note">Link pendek <code>vm.tiktok.com</code> tidak berisi ID. Buka dulu di browser, lalu salin alamat panjangnya. Untuk video yang disimpan sebagai draf lalu diposting belakangan, jam yang terbaca bisa jadi jam saat draf dibuat.</p>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmtDate = new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", weekday: "short", day: "numeric", month: "short", year: "numeric" });
+const fmtTime = new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+const fmtHour = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Jakarta", hour: "2-digit", hour12: false });
+let lastRows = [];
+
+// Ambil ID dari link /video/ atau /photo/, atau angka panjang polos.
+function extractId(line) {
+  const m = line.match(/\/(?:video|photo)\/(\d{15,20})/) || line.match(/^\s*(\d{15,20})\s*$/);
+  return m ? m[1] : null;
+}
+
+function decode(id) {
+  const date = new Date(Number(BigInt(id) >> 32n) * 1000);
+  // ponytail: cek kewajaran sederhana; TikTok mulai 2016, dan waktu tidak boleh di masa depan
+  if (date.getUTCFullYear() < 2016 || date.getTime() > Date.now() + 86400000) return null;
+  return date;
+}
+
+function run() {
+  const lines = $("input").value.split("\n").map(s => s.trim()).filter(Boolean);
+  const rows = [], errors = [];
+  lines.forEach((line, i) => {
+    const id = extractId(line);
+    if (!id) { errors.push(`Baris ${i + 1}: ID tidak ditemukan${/vm\.tiktok|tiktok\.com\/t\//.test(line) ? " (link pendek, buka dulu lalu salin alamat panjangnya)" : ""}.`); return; }
+    const date = decode(id);
+    if (!date) { errors.push(`Baris ${i + 1}: angka ${id} bukan ID TikTok yang wajar.`); return; }
+    rows.push({ id, date });
+  });
+  rows.sort((a, b) => a.date - b.date);
+  lastRows = rows;
+
+  $("rows").innerHTML = rows.map((r, i) =>
+    `<tr><td>${i + 1}</td><td>${fmtDate.format(r.date)}</td><td class="time">${fmtTime.format(r.date).replace(/\./g, ":")}</td><td class="id">${r.id}</td></tr>`).join("")
+    || `<tr><td colspan="4" class="hint">Belum ada hasil. Tempel link atau ID lalu tekan Baca waktu upload.</td></tr>`;
+
+  $("errors").hidden = !errors.length;
+  $("errors").innerHTML = errors.map(e => `<li>${e}</li>`).join("");
+
+  const counts = Array(24).fill(0);
+  rows.forEach(r => counts[Number(fmtHour.format(r.date)) % 24]++);
+  const max = Math.max(...counts);
+  $("summary").hidden = rows.length < 2;
+  if (rows.length >= 2) {
+    const tops = counts.map((c, h) => c === max ? h : -1).filter(h => h >= 0);
+    $("peak").innerHTML = `Paling sering di jam <b>${tops.map(h => String(h).padStart(2, "0") + ":00").join(", ")}</b> WIB · ${max} dari ${rows.length} video`;
+    $("bars").innerHTML = counts.map((c, h) =>
+      `<div class="bar${c === max ? " top" : ""}" style="height:${c ? (c / max) * 100 : 0}%" title="${String(h).padStart(2, "0")}:00 · ${c} video"></div>`).join("");
+    $("ticks").innerHTML = counts.map((_, h) => `<span>${h}</span>`).join("");
+  }
+  $("status").textContent = `${rows.length} video terbaca${errors.length ? `, ${errors.length} baris dilewati` : ""}.`;
+}
+
+$("run").addEventListener("click", run);
+$("clear").addEventListener("click", () => { $("input").value = ""; run(); $("input").focus(); });
+$("copy").addEventListener("click", async () => {
+  if (!lastRows.length) return;
+  const tsv = ["Tanggal\tJam WIB\tID", ...lastRows.map(r => `${fmtDate.format(r.date)}\t${fmtTime.format(r.date).replace(/\./g, ":")}\t${r.id}`)].join("\n");
+  try { await navigator.clipboard.writeText(tsv); $("status").textContent = "Tabel disalin. Tempel di spreadsheet."; }
+  catch { $("input").value = tsv; $("input").select(); $("status").textContent = "Salin otomatis tidak bisa di sini. Tabel sudah ditaruh di kotak isian, tekan salin manual."; }
+});
+run();
+</script>
